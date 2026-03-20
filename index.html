@@ -684,9 +684,14 @@
   }
 
   $('view-save-btn').onclick=saveView;
-  function saveView(){const name=$('view-name-input').value.trim()||('View '+(views.length+1));views.push({name,indent:0,state:captureState()});activeViewIdx=views.length-1;$('view-name-input').value='';renderViewsList();}
+  function saveView(){
+    // Auto-save current view before creating new one
+    if(activeViewIdx>=0&&activeViewIdx<views.length){views[activeViewIdx].state=captureState();}
+    const name=$('view-name-input').value.trim()||('View '+(views.length+1));views.push({name,indent:0,state:captureState()});activeViewIdx=views.length-1;$('view-name-input').value='';renderViewsList();
+  }
   $('new-blank-view-btn').onclick=()=>{
-    // Create a blank state — no drawings, waypoints, or text. Pins + POIs persist globally.
+    // Auto-save current view before creating blank
+    if(activeViewIdx>=0&&activeViewIdx<views.length){views[activeViewIdx].state=captureState();}
     const blankState={drawObjects:[],markersHTML:'',routeNames:{},wpNames:{},currentRouteId:1,waypointCounter:0,color:'#ffffff'};
     const name=$('view-name-input').value.trim()||('View '+(views.length+1));
     views.push({name,indent:0,state:blankState});
@@ -702,7 +707,10 @@
       const item=document.createElement('div');item.className='view-item'+(i===activeViewIdx?' active-view':'');
       item.style.marginLeft=(v.indent*20)+'px';item.draggable=true;item.dataset.viewIdx=i;
       item.innerHTML=`<span class="view-name">${v.name}</span><div class="view-actions"><button title="Unindent">◀</button><button title="Indent">▶</button><button title="Duplicate" style="font-size:10px;">⧉</button><button class="view-del" title="Delete">&times;</button></div>`;
-      item.onclick=e=>{if(e.target.closest('.view-actions'))return;activeViewIdx=i;restoreState(v.state);renderViewsList();};
+      item.onclick=e=>{if(e.target.closest('.view-actions'))return;
+        // Auto-save current view before switching
+        if(activeViewIdx>=0&&activeViewIdx<views.length){views[activeViewIdx].state=captureState();}
+        activeViewIdx=i;restoreState(v.state);renderViewsList();};
       const btns=item.querySelectorAll('.view-actions button');
       btns[0].onclick=e=>{e.stopPropagation();if(v.indent>0)v.indent--;renderViewsList();};
       btns[1].onclick=e=>{e.stopPropagation();if(v.indent<4)v.indent++;renderViewsList();};
@@ -887,6 +895,8 @@
 
   function doSave(){
     if(!mapRef){saveStatus.textContent='Local only';saveStatus.style.color='#ff9100';return;}
+    // Always capture current canvas state into the active view before saving
+    if(activeViewIdx>=0&&activeViewIdx<views.length){views[activeViewIdx].state=captureState();}
     try{
       const data={
         drawObjects:drawObjects.map(o=>({type:o.type,dataUrl:o.canvas.toDataURL()})),

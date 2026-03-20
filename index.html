@@ -1029,7 +1029,7 @@
           ts.mode='draw';
           canvasWrap.onmousedown({button:0,clientX:ts._pendingTouch.clientX,clientY:ts._pendingTouch.clientY,preventDefault:()=>{}});
         }
-      },80);
+      },150);
     }
   },{passive:false});
   canvasWrap.addEventListener('touchmove',e=>{
@@ -1081,6 +1081,8 @@
     if(ts.mode==='pending'){
       // Finger lifted before timer — it was a quick tap, commit the action
       if(ts._pendingTimer){clearTimeout(ts._pendingTimer);ts._pendingTimer=null;}
+      // If another finger is still down, a pinch is starting — don't place anything
+      if(e.touches.length>0){ts.mode=null;return;}
       const ct=e.changedTouches[0];
       canvasWrap.onmousedown({button:0,clientX:ts._pendingTouch.clientX,clientY:ts._pendingTouch.clientY,preventDefault:()=>{}});
       window.dispatchEvent(new MouseEvent('mouseup',{button:0,clientX:ct?ct.clientX:0,clientY:ct?ct.clientY:0}));

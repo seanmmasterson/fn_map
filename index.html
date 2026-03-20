@@ -180,7 +180,7 @@
 <button id="pan-float" title="Pan mode" style="position:fixed;bottom:10px;right:10px;width:40px;height:40px;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;z-index:100;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:all .15s;"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 11V6a2 2 0 00-4 0v1M14 10V4a2 2 0 00-4 0v6M10 10.5V6a2 2 0 00-4 0v8"/><path d="M18 8a2 2 0 014 0v7a8 8 0 01-8 8h-2c-2.8 0-4.5-.9-5.9-2.6L3 16.3A1.5 1.5 0 013 14l.6-.6a2 2 0 012.6 0L10 17"/></svg></button>
 <div id="save-status" style="position:fixed;top:14px;right:10px;background:transparent;border:none;padding:0 6px;font-family:var(--font-display);font-weight:600;font-size:10px;color:var(--muted);z-index:101;pointer-events:none;display:none;">Loading...</div>
 <div id="wp-panel" class="hidden"><div class="wp-panel-header"><h3>Waypoints</h3><button class="help-close" id="wp-close">&times;</button></div><div class="wp-panel-list" id="wp-list"></div><div class="wp-panel-hint">Tap name to rename · Double-tap on map = delete</div></div>
-<div id="views-panel" class="hidden"><div class="views-header"><h3>Views</h3><button class="help-close" id="views-close">&times;</button></div><div class="views-list" id="views-list"></div><div class="views-add"><div class="views-add-row"><input type="text" id="view-name-input" placeholder="e.g. Early Game" maxlength="30"><button id="view-save-btn">Save</button></div><button id="new-blank-view-btn" style="width:100%;margin-top:4px;background:transparent;color:var(--accent);border:1.5px solid var(--accent);font-family:var(--font-display);font-weight:700;font-size:11px;padding:6px 10px;border-radius:5px;cursor:pointer;">+ New Blank View</button></div></div>
+<div id="views-panel" class="hidden"><div class="views-header"><h3>Views</h3><button class="help-close" id="views-close">&times;</button></div><div class="views-list" id="views-list"></div><div class="views-add"><div class="views-add-row"><input type="text" id="view-name-input" placeholder="View name..." maxlength="30"></div><div style="display:flex;gap:4px;margin-top:4px;"><button id="view-save-btn" style="flex:1;background:var(--accent);color:var(--bg-dark);border:none;font-family:var(--font-display);font-weight:700;font-size:11px;padding:6px 10px;border-radius:5px;cursor:pointer;">Save Current</button><button id="new-blank-view-btn" style="flex:1;background:transparent;color:var(--accent);border:1.5px solid var(--accent);font-family:var(--font-display);font-weight:700;font-size:11px;padding:6px 10px;border-radius:5px;cursor:pointer;">+ Blank</button></div></div></div>
 <div class="dialog-overlay" id="text-dialog"><input type="text" id="text-input" placeholder="Type label..." maxlength="50"><select id="text-size" style="width:260px;max-width:100%;background:var(--bg-hover);border:1px solid var(--border);color:var(--white);font-family:var(--font-body);font-size:13px;font-weight:600;padding:10px 14px;border-radius:8px;outline:none;margin-bottom:8px;"><option value="14">Small</option><option value="18" selected>Medium</option><option value="24">Large</option><option value="32">XL</option></select><div class="dbtn"><button class="bs" id="text-cancel">Cancel</button><button class="bp" id="text-confirm">Place</button></div></div>
 <div class="dialog-overlay" id="route-name-dialog"><div class="dialog-label" id="rn-label">Route Name</div><input type="text" id="route-name-input" placeholder="Player name (e.g. IGL)" maxlength="20" style="font-size:14px;font-weight:600;"><div class="dbtn"><button class="bs" id="rn-skip">Skip</button><button class="bp" id="rn-confirm">Set Name</button></div></div>
 <div class="dialog-overlay" id="wp-rename-dialog"><div class="dialog-label">Rename</div><input type="text" id="wp-rename-input" placeholder="Name..." maxlength="20" style="font-size:14px;font-weight:600;"><div class="dbtn"><button class="bs" id="wpr-cancel">Cancel</button><button class="bp" id="wpr-confirm">Rename</button></div></div>
@@ -708,7 +708,7 @@
     views.forEach((v,i)=>{
       const item=document.createElement('div');item.className='view-item'+(i===activeViewIdx?' active-view':'');
       item.style.marginLeft=(v.indent*20)+'px';item.draggable=true;item.dataset.viewIdx=i;
-      item.innerHTML=`<span class="view-name">${v.name}</span><div class="view-actions"><button title="Unindent">◀</button><button title="Indent">▶</button><button title="Duplicate" style="font-size:10px;">⧉</button><button class="view-del" title="Delete">&times;</button></div>`;
+      item.innerHTML=`<span class="view-name">${v.name}</span><div class="view-actions"><button title="Rename">✏️</button><button title="Unindent">◀</button><button title="Indent">▶</button><button title="Duplicate" style="font-size:10px;">⧉</button><button class="view-del" title="Delete">&times;</button></div>`;
       item.onclick=e=>{if(e.target.closest('.view-actions'))return;
         if(i===activeViewIdx)return; // already on this view
         switchingView=true;
@@ -717,10 +717,19 @@
         activeViewIdx=i;restoreState(v.state);renderViewsList();
         switchingView=false;};
       const btns=item.querySelectorAll('.view-actions button');
-      btns[0].onclick=e=>{e.stopPropagation();if(v.indent>0)v.indent--;renderViewsList();};
-      btns[1].onclick=e=>{e.stopPropagation();if(v.indent<4)v.indent++;renderViewsList();};
-      btns[2].onclick=e=>{e.stopPropagation();views.splice(i+1,0,{name:v.name+' (copy)',indent:v.indent,state:JSON.parse(JSON.stringify(v.state))});activeViewIdx=i+1;renderViewsList();};
-      btns[3].onclick=e=>{e.stopPropagation();views.splice(i,1);if(activeViewIdx>=views.length)activeViewIdx=Math.max(0,views.length-1);renderViewsList();};
+      btns[0].onclick=e=>{e.stopPropagation();
+        // Inline rename
+        const nameSpan=item.querySelector('.view-name');
+        const inp=document.createElement('input');inp.type='text';inp.value=v.name;inp.maxLength=30;
+        inp.style.cssText='flex:1;background:var(--bg-hover);border:1px solid var(--accent);color:var(--white);font-family:var(--font-display);font-size:12px;font-weight:600;padding:2px 6px;border-radius:4px;outline:none;min-width:0;';
+        nameSpan.replaceWith(inp);inp.focus();inp.select();
+        const commit=()=>{const n=inp.value.trim();if(n)v.name=n;renderViewsList();};
+        inp.onblur=commit;inp.onkeydown=ev=>{if(ev.key==='Enter'){ev.preventDefault();commit();}if(ev.key==='Escape'){renderViewsList();}};
+      };
+      btns[1].onclick=e=>{e.stopPropagation();if(v.indent>0)v.indent--;renderViewsList();};
+      btns[2].onclick=e=>{e.stopPropagation();if(v.indent<4)v.indent++;renderViewsList();};
+      btns[3].onclick=e=>{e.stopPropagation();views.splice(i+1,0,{name:v.name+' (copy)',indent:v.indent,state:JSON.parse(JSON.stringify(v.state))});activeViewIdx=i+1;renderViewsList();};
+      btns[4].onclick=e=>{e.stopPropagation();views.splice(i,1);if(activeViewIdx>=views.length)activeViewIdx=Math.max(0,views.length-1);renderViewsList();};
       item.addEventListener('dragstart',e=>{dragViewIdx=i;item.style.opacity='0.4';e.dataTransfer.effectAllowed='move';});
       item.addEventListener('dragend',()=>{item.style.opacity='1';dragViewIdx=null;list.querySelectorAll('.view-item').forEach(el=>el.style.borderTop='');});
       item.addEventListener('dragover',e=>{e.preventDefault();if(dragViewIdx===null||dragViewIdx===i)return;list.querySelectorAll('.view-item').forEach(el=>el.style.borderTop='');item.style.borderTop='2px solid var(--accent)';});

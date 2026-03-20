@@ -192,7 +192,7 @@
   let pendingTextPos=null,arrowStart=null,shapeStart=null;
   let waypointCounter=0,drawOpacity=1,currentRouteId=1;
   let routeNames={},wpNames={},undoStack=[],redoStack=[];
-  let views=[],activeViewIdx=-1,selectedWpEl=null,firstRouteNamed=false;
+  let views=[],activeViewIdx=-1,selectedWpEl=null,firstRouteNamed=false,switchingView=false;
   let currentShape='circle',currentPin='pin';
   // Object-based drawing: each draw action is stored and rendered as its own canvas
   let drawObjects=[]; // [{type:'stroke'|'arrow'|'shape', canvas, id}]
@@ -661,8 +661,8 @@
 
   // ── VIEWS ──
   function captureState(){
-    // Serialize draw objects as data URLs
-    const doData=drawObjects.map(o=>({type:o.type,dataUrl:o.canvas.toDataURL()}));
+    // Serialize draw objects — use cached dataUrl if available (handles async image loads)
+    const doData=drawObjects.map(o=>({type:o.type,dataUrl:o._srcDataUrl||o.canvas.toDataURL()}));
     // markersLayer now only has waypoints + text (pins are in pinsLayer, excluded from view state)
     return{drawObjects:doData,markersHTML:markersLayer.innerHTML,routeNames:JSON.parse(JSON.stringify(routeNames)),wpNames:JSON.parse(JSON.stringify(wpNames)),currentRouteId,waypointCounter,color};
   }
@@ -674,7 +674,7 @@
   }
   function restoreState(st){
     drawObjects.forEach(o=>o.canvas.remove());drawObjects=[];drawObjectsLayer.innerHTML='';
-    if(st.drawObjects){st.drawObjects.forEach(d=>{const c=createDrawCanvas(),cx=c.getContext('2d');const img=new Image();img.onload=()=>cx.drawImage(img,0,0);img.src=d.dataUrl;const id=++drawIdCounter;c.dataset.drawId=id;drawObjects.push({id,type:d.type,canvas:c});drawObjectsLayer.appendChild(c);c.style.opacity=drawOpacity;});}
+    if(st.drawObjects){st.drawObjects.forEach(d=>{const c=createDrawCanvas(),cx=c.getContext('2d');const img=new Image();img.onload=()=>{cx.drawImage(img,0,0);delete obj._srcDataUrl;};img.src=d.dataUrl;const id=++drawIdCounter;c.dataset.drawId=id;const obj={id,type:d.type,canvas:c,_srcDataUrl:d.dataUrl};drawObjects.push(obj);drawObjectsLayer.appendChild(c);c.style.opacity=drawOpacity;});}
     // Strip any legacy pins from markersHTML before restoring
     markersLayer.innerHTML=stripPinsFromHTML(st.markersHTML||'');routeNames=JSON.parse(JSON.stringify(st.routeNames));wpNames=JSON.parse(JSON.stringify(st.wpNames||{}));currentRouteId=st.currentRouteId;waypointCounter=st.waypointCounter;
     if(st.color){color=st.color;document.querySelectorAll('.cdot').forEach(d=>d.classList.toggle('active',d.dataset.color===color));}
@@ -686,19 +686,21 @@
   $('view-save-btn').onclick=saveView;
   function saveView(){
     // Auto-save current view before creating new one
-    if(activeViewIdx>=0&&activeViewIdx<views.length){views[activeViewIdx].state=captureState();}
-    const name=$('view-name-input').value.trim()||('View '+(views.length+1));views.push({name,indent:0,state:captureState()});activeViewIdx=views.length-1;$('view-name-input').value='';renderViewsList();
+    if(activeViewIdx>=0&&activeViewIdx<views.length){views[activeViewIdx].state=JSON.parse(JSON.stringify(captureState()));}
+    const name=$('view-name-input').value.trim()||('View '+(views.length+1));views.push({name,indent:0,state:JSON.parse(JSON.stringify(captureState()))});activeViewIdx=views.length-1;$('view-name-input').value='';renderViewsList();
   }
   $('new-blank-view-btn').onclick=()=>{
     // Auto-save current view before creating blank
-    if(activeViewIdx>=0&&activeViewIdx<views.length){views[activeViewIdx].state=captureState();}
+    if(activeViewIdx>=0&&activeViewIdx<views.length){views[activeViewIdx].state=JSON.parse(JSON.stringify(captureState()));}
     const blankState={drawObjects:[],markersHTML:'',routeNames:{},wpNames:{},currentRouteId:1,waypointCounter:0,color:'#ffffff'};
     const name=$('view-name-input').value.trim()||('View '+(views.length+1));
     views.push({name,indent:0,state:blankState});
     activeViewIdx=views.length-1;
     $('view-name-input').value='';
+    switchingView=true;
     restoreState(blankState);
     renderViewsList();
+    switchingView=false;
   };
   let dragViewIdx=null;
   function renderViewsList(){
@@ -708,9 +710,12 @@
       item.style.marginLeft=(v.indent*20)+'px';item.draggable=true;item.dataset.viewIdx=i;
       item.innerHTML=`<span class="view-name">${v.name}</span><div class="view-actions"><button title="Unindent">◀</button><button title="Indent">▶</button><button title="Duplicate" style="font-size:10px;">⧉</button><button class="view-del" title="Delete">&times;</button></div>`;
       item.onclick=e=>{if(e.target.closest('.view-actions'))return;
+        if(i===activeViewIdx)return; // already on this view
+        switchingView=true;
         // Auto-save current view before switching
-        if(activeViewIdx>=0&&activeViewIdx<views.length){views[activeViewIdx].state=captureState();}
-        activeViewIdx=i;restoreState(v.state);renderViewsList();};
+        if(activeViewIdx>=0&&activeViewIdx<views.length){views[activeViewIdx].state=JSON.parse(JSON.stringify(captureState()));}
+        activeViewIdx=i;restoreState(v.state);renderViewsList();
+        switchingView=false;};
       const btns=item.querySelectorAll('.view-actions button');
       btns[0].onclick=e=>{e.stopPropagation();if(v.indent>0)v.indent--;renderViewsList();};
       btns[1].onclick=e=>{e.stopPropagation();if(v.indent<4)v.indent++;renderViewsList();};
@@ -831,9 +836,9 @@
         drawObjects.forEach(o=>o.canvas.remove());drawObjects=[];drawObjectsLayer.innerHTML='';
         if(data.drawObjects){data.drawObjects.forEach(d=>{
           const c=createDrawCanvas(),cx=c.getContext('2d');
-          const img=new Image();img.onload=()=>cx.drawImage(img,0,0);img.src=d.dataUrl;
-          const id=++drawIdCounter;c.dataset.drawId=id;
-          drawObjects.push({id,type:d.type,canvas:c});
+          const img=new Image();const obj={id:0,type:d.type,canvas:c,_srcDataUrl:d.dataUrl};img.onload=()=>{cx.drawImage(img,0,0);delete obj._srcDataUrl;};img.src=d.dataUrl;
+          const id=++drawIdCounter;c.dataset.drawId=id;obj.id=id;
+          drawObjects.push(obj);
           drawObjectsLayer.appendChild(c);c.style.opacity=drawOpacity;
         });}
         if(data.markersHTML)markersLayer.innerHTML=stripPinsFromHTML(data.markersHTML);
@@ -895,8 +900,8 @@
 
   function doSave(){
     if(!mapRef){saveStatus.textContent='Local only';saveStatus.style.color='#ff9100';return;}
-    // Always capture current canvas state into the active view before saving
-    if(activeViewIdx>=0&&activeViewIdx<views.length){views[activeViewIdx].state=captureState();}
+    // Capture current canvas state into the active view before saving (but not during a view switch)
+    if(!switchingView&&activeViewIdx>=0&&activeViewIdx<views.length){views[activeViewIdx].state=JSON.parse(JSON.stringify(captureState()));}
     try{
       const data={
         drawObjects:drawObjects.map(o=>({type:o.type,dataUrl:o.canvas.toDataURL()})),
@@ -932,9 +937,9 @@
       drawObjects.forEach(o=>o.canvas.remove());drawObjects=[];drawObjectsLayer.innerHTML='';
       if(data.drawObjects){data.drawObjects.forEach(d=>{
         const c=createDrawCanvas(),cx=c.getContext('2d');
-        const img=new Image();img.onload=()=>cx.drawImage(img,0,0);img.src=d.dataUrl;
-        const id=++drawIdCounter;c.dataset.drawId=id;
-        drawObjects.push({id,type:d.type,canvas:c});
+        const img=new Image();const obj={id:0,type:d.type,canvas:c,_srcDataUrl:d.dataUrl};img.onload=()=>{cx.drawImage(img,0,0);delete obj._srcDataUrl;};img.src=d.dataUrl;
+        const id=++drawIdCounter;c.dataset.drawId=id;obj.id=id;
+        drawObjects.push(obj);
         drawObjectsLayer.appendChild(c);c.style.opacity=drawOpacity;
       });}
       // Restore markers — strip any legacy pins from markersHTML (they now live in pinsLayer)

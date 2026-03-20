@@ -111,12 +111,106 @@
   .bs{background:transparent;color:var(--accent);font-family:var(--font-display);font-weight:600;font-size:13px;padding:8px 18px;border:1.5px solid var(--accent);border-radius:6px;cursor:pointer;}
   .dialog-label{font-family:var(--font-display);font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
   @media(max-width:800px){.tbtn{padding:5px 6px;font-size:11px;min-height:36px;}.tbtn span{display:none;}.szslider{width:40px;}.cdot{width:18px;height:18px;}#wp-panel{width:200px;}#views-panel{width:200px;}.numbered-marker{width:32px;height:32px;font-size:15px;}.marker{width:34px;height:34px;}}
+  /* ── TRACKER OVERLAY ── */
+  #mode-toggle.tracker-active{background:rgba(0,212,255,0.15)!important;}
+  #tracker-overlay{display:none;position:fixed;top:48px;left:0;right:0;bottom:0;background:var(--bg-dark);z-index:95;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px 20px 20px;}
+  #tracker-overlay.show{display:block;}
+  .tracker-container{max-width:900px;margin:0 auto;}
+  /* Stats dashboard */
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px;}
+  .stat-card{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;padding:14px 16px;text-align:center;}
+  .stat-value{font-family:var(--font-display);font-size:28px;font-weight:800;color:var(--accent);line-height:1.1;}
+  .stat-label{font-family:var(--font-body);font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:4px;}
+  /* Action bar */
+  .tracker-actions{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+  .tracker-actions button{font-family:var(--font-display);font-weight:700;font-size:12px;padding:8px 16px;border-radius:6px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;border:none;transition:all .15s;}
+  .btn-log{background:var(--accent);color:var(--bg-dark);}
+  .btn-log:hover{background:#33ddff;}
+  .btn-secondary{background:transparent;color:var(--accent);border:1.5px solid var(--accent)!important;}
+  .btn-secondary:hover{background:rgba(0,212,255,0.1);}
+  /* Game log table */
+  .game-table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
+  .game-table{width:100%;border-collapse:collapse;font-family:var(--font-body);font-size:13px;}
+  .game-table th{background:var(--bg-panel);color:var(--accent);font-family:var(--font-display);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);position:sticky;top:0;white-space:nowrap;}
+  .game-table td{padding:8px 12px;border-bottom:1px solid var(--border);color:var(--white);vertical-align:middle;}
+  .game-table tr:hover td{background:var(--bg-hover);}
+  .game-table .placement-win{color:#00e676;font-weight:700;}
+  .game-table .placement-top5{color:#ffd600;font-weight:700;}
+  .game-table .placement-top10{color:#ff9100;font-weight:600;}
+  .game-table .game-del{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:4px;}
+  .game-table .game-del:hover{color:#ff3b5c;background:rgba(255,59,92,0.15);}
+  .game-empty{text-align:center;padding:40px;color:var(--muted);font-size:14px;}
+  /* Log game form */
+  #log-form-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:200;align-items:center;justify-content:center;}
+  #log-form-overlay.show{display:flex;}
+  .log-form{background:var(--bg-panel);border:1px solid var(--border);border-radius:14px;padding:24px;width:420px;max-width:92vw;max-height:90vh;overflow-y:auto;box-shadow:0 16px 48px rgba(0,0,0,0.6);}
+  .log-form h3{font-family:var(--font-display);font-size:16px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;}
+  .form-row{margin-bottom:12px;}
+  .form-row label{display:block;font-family:var(--font-display);font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
+  .form-row input,.form-row select,.form-row textarea{width:100%;background:var(--bg-hover);border:1px solid var(--border);color:var(--white);font-family:var(--font-body);font-size:13px;font-weight:600;padding:8px 10px;border-radius:6px;outline:none;box-sizing:border-box;}
+  .form-row input:focus,.form-row select:focus,.form-row textarea:focus{border-color:var(--accent);}
+  .form-row textarea{resize:vertical;min-height:50px;}
+  .player-rows{display:flex;flex-direction:column;gap:6px;}
+  .player-row{display:flex;gap:6px;align-items:center;}
+  .player-row input{flex:1;}
+  .player-row .kills-input{width:60px;flex:none;text-align:center;}
+  .player-row .remove-player{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:0 4px;flex:none;}
+  .player-row .remove-player:hover{color:#ff3b5c;}
+  .add-player-btn{background:transparent;border:1px dashed var(--border);color:var(--muted);font-family:var(--font-body);font-size:12px;font-weight:600;padding:6px;border-radius:6px;cursor:pointer;width:100%;margin-top:4px;transition:all .15s;}
+  .add-player-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .location-btn{background:transparent;border:1.5px solid var(--accent);color:var(--accent);font-family:var(--font-display);font-weight:700;font-size:11px;padding:6px 12px;border-radius:6px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;transition:all .15s;}
+  .location-btn:hover{background:rgba(0,212,255,0.1);}
+  .location-btn.has-location{background:rgba(0,230,118,0.15);border-color:#00e676;color:#00e676;}
+  .location-preview{font-size:11px;color:var(--muted);margin-top:4px;}
+  .form-buttons{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
+  .player-suggest{position:absolute;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;z-index:210;max-height:120px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.5);}
+  .player-suggest-item{padding:6px 10px;cursor:pointer;font-family:var(--font-body);font-size:12px;font-weight:600;color:var(--muted);}
+  .player-suggest-item:hover{background:var(--bg-hover);color:var(--white);}
+  @media(max-width:800px){.stats-grid{grid-template-columns:repeat(2,1fr);}.log-form{padding:16px;}}
+  .pf-btn{background:var(--bg-hover);border:1.5px solid var(--border);color:var(--muted);font-family:var(--font-display);font-weight:700;font-size:11px;padding:5px 12px;border-radius:20px;cursor:pointer;transition:all .15s;white-space:nowrap;-webkit-tap-highlight-color:transparent;}
+  .pf-btn:hover{border-color:var(--muted);color:var(--white);}
+  .pf-btn.pf-active{background:rgba(0,212,255,0.15);border-color:var(--accent);color:var(--accent);}
+  .pf-btn.pf-all{font-size:10px;padding:5px 10px;}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 </head>
 <body>
+<div id="tracker-overlay">
+  <div class="tracker-container">
+    <div id="player-filters" style="display:none;gap:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
+      <span style="font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-right:4px;">Filter:</span>
+    </div>
+    <div class="stats-grid" id="stats-grid"></div>
+    <div class="game-table-wrap"><table class="game-table" id="game-table"></table></div>
+  </div>
+</div>
+<div id="log-form-overlay">
+  <div class="log-form">
+    <h3 id="log-form-title">Log Game</h3>
+    <div class="form-row"><label>Date &amp; Time</label><input type="datetime-local" id="gf-date"></div>
+    <div class="form-row"><label>Placement</label><input type="number" id="gf-placement" min="1" max="100" placeholder="1–100"></div>
+    <div class="form-row">
+      <label>Players &amp; Kills</label>
+      <div class="player-rows" id="gf-players"></div>
+      <button class="add-player-btn" id="gf-add-player">+ Add Player</button>
+    </div>
+    <div class="form-row">
+      <label>Death/Win Location</label>
+      <button class="location-btn" id="gf-location-btn">Click to set on map</button>
+      <div class="location-preview" id="gf-location-preview"></div>
+    </div>
+    <div class="form-row"><label>Notes</label><textarea id="gf-notes" placeholder="Optional..." rows="2"></textarea></div>
+    <div class="form-buttons">
+      <button class="bs" id="gf-cancel">Cancel</button>
+      <button class="bp" id="gf-save">Save Game</button>
+    </div>
+  </div>
+</div>
 <div id="toolbar">
+  <button class="tbtn" id="mode-toggle" style="color:var(--accent);border-color:var(--accent);margin-right:2px;">📊 <span>Tracker</span></button>
+  <div class="tsep"></div>
+  <span id="map-tools" style="display:contents;">
   <button class="tbtn" id="undo-btn" title="Undo (Ctrl+Z)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h10a5 5 0 015 5v0a5 5 0 01-5 5H12"/><polyline points="7 6 3 10 7 14"/></svg></button>
   <button class="tbtn" id="redo-btn" title="Redo (Ctrl+Y)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10H11a5 5 0 00-5 5v0a5 5 0 005 5h1"/><polyline points="17 6 21 10 17 14"/></svg></button>
   <div class="tsep"></div>
@@ -173,6 +267,13 @@
   <div style="flex:1;min-width:4px;"></div>
   <button class="tbtn" id="coord-mode-btn" title="Place symbols and log coordinates">📌<span>Log</span></button>
   <button class="tbtn" id="sync-status-btn" title="Show sync status"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></button>
+  </span>
+  <span id="tracker-tools" style="display:none;">
+  <button class="tbtn" id="tb-log-game" style="color:#00e676;border-color:#00e676;font-size:14px;padding:8px 14px;">+ <span>Log Game</span></button>
+  <button class="tbtn" id="tb-filter-toggle" style="font-size:14px;padding:8px 14px;">🔍 <span>Filter</span></button>
+  <button class="tbtn" id="tb-export-csv" style="font-size:14px;padding:8px 14px;">📥 <span>CSV</span></button>
+  <div style="flex:1;min-width:4px;"></div>
+  </span>
 </div>
 <div id="helpbar" class="hidden"><span><kbd>D</kbd> draw</span><span><kbd>A</kbd> arrow</span><span><kbd>C</kbd> shape</span><span><kbd>W</kbd> waypoint</span><span><kbd>N</kbd> new route</span><span><kbd>M</kbd> pin</span><span><kbd>T</kbd> text</span><span><kbd>E</kbd> eraser (click object to delete)</span><span><kbd>Space</kbd> pan</span><span><kbd>Scroll</kbd> zoom</span><span><kbd>Ctrl+Z/Y</kbd> undo/redo</span><span>Double-tap WP=delete</span><div class="help-opacity">Opacity <input type="range" min="10" max="100" value="100" id="opacity-slider"></div><button class="help-close" id="help-close">&times;</button></div>
 <div id="canvas-wrap"><div id="transform-group"><img id="map-image" alt="Map"><div id="draw-objects-layer"></div><canvas id="preview-canvas"></canvas><svg id="waypoint-lines"></svg><div id="poi-layer"></div><div id="pins-layer"></div><div id="markers-layer"></div></div></div>
@@ -1030,6 +1131,426 @@
   // We'll catch remaining cases by also saving on mouseup/touchend when drawing
   canvasWrap.addEventListener('mouseup',()=>{if(initialLoadDone)scheduleSave();});
   canvasWrap.addEventListener('touchend',()=>{if(initialLoadDone)scheduleSave();});
+
+  // ══════════════════════════════════════
+  // ── GAME TRACKER MODULE ──
+  // ══════════════════════════════════════
+  const trackerOverlay=$('tracker-overlay'),modeToggle=$('mode-toggle');
+  const logFormOverlay=$('log-form-overlay');
+  let trackerMode=false,games=[],knownPlayers=[];
+  let gamesRef=null,playersRef=null;
+  let selectedPlayers=new Set(); // empty = show all
+  if(db){gamesRef=db.ref('games');playersRef=db.ref('players');}
+
+  // Location picking state
+  let pickingLocation=false,pickedLocation=null,editingGameId=null;
+
+  // ── MODE TOGGLE ──
+  const mapToolsEl=$('map-tools'),trackerToolsEl=$('tracker-tools');
+  const zoomInd=$('zoom-ind'),panFloatEl=$('pan-float');
+  modeToggle.onclick=()=>{
+    trackerMode=!trackerMode;
+    trackerOverlay.classList.toggle('show',trackerMode);
+    modeToggle.classList.toggle('tracker-active',trackerMode);
+    modeToggle.innerHTML=trackerMode?'🗺️ <span>Map</span>':'📊 <span>Tracker</span>';
+    // Toggle toolbar sections
+    mapToolsEl.style.display=trackerMode?'none':'contents';
+    trackerToolsEl.style.display=trackerMode?'contents':'none';
+    // Hide zoom/pan controls in tracker mode
+    zoomInd.style.display=trackerMode?'none':'flex';
+    panFloatEl.style.display=trackerMode?'none':'flex';
+    if(trackerMode)renderTracker();
+  };
+
+  // Tracker toolbar button handlers
+  $('tb-log-game').onclick=()=>openLogForm();
+  $('tb-filter-toggle').onclick=()=>{
+    const f=$('player-filters');
+    const showing=f.style.display==='none';
+    f.style.display=showing?'flex':'none';
+    $('tb-filter-toggle').classList.toggle('active',showing);
+  };
+  $('tb-export-csv').onclick=()=>exportGamesCSV();
+
+  // ── LOAD GAMES FROM FIREBASE ──
+  if(gamesRef){
+    gamesRef.on('value',snap=>{
+      const data=snap.val();
+      games=data?Object.keys(data).map(k=>({id:k,...data[k]})):[];
+      games.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+      if(trackerMode)renderTracker();
+    });
+  }
+  const defaultPlayers=['Seán','Vicky','Adam','Mark','Aaron','Calan','Lauren','David'];
+  knownPlayers=[...defaultPlayers];
+  if(playersRef){
+    playersRef.on('value',snap=>{
+      const saved=snap.val()||[];
+      knownPlayers=[...new Set([...defaultPlayers,...saved])];
+    });
+  }
+
+  // ── STATS ──
+  function getFilteredGames(){
+    if(!selectedPlayers.size)return games; // no filter = all games
+    return games.filter(g=>{
+      const names=(g.players||[]).map(p=>p.name);
+      return[...selectedPlayers].every(sp=>names.includes(sp));
+    });
+  }
+
+  function computeStats(filteredGames){
+    const fg=filteredGames||getFilteredGames();
+    const total=fg.length;
+    if(!total)return{total:0,wins:0,winRate:'0%',avgPlace:'-',avgKills:'-',totalKills:0,bestPlace:'-',top5:0,top10:0,playerKills:{}};
+    const wins=fg.filter(g=>g.placement===1).length;
+    const top5=fg.filter(g=>g.placement>=1&&g.placement<=5).length;
+    const top10=fg.filter(g=>g.placement>=1&&g.placement<=10).length;
+    const avgPlace=(fg.reduce((s,g)=>s+(g.placement||0),0)/total).toFixed(1);
+    // If players are selected, only count their kills; otherwise count all
+    let totalKills=0;
+    const playerKills={};
+    fg.forEach(g=>{
+      (g.players||[]).forEach(p=>{
+        if(!selectedPlayers.size||selectedPlayers.has(p.name)){
+          totalKills+=(p.kills||0);
+          playerKills[p.name]=(playerKills[p.name]||0)+(p.kills||0);
+        }
+      });
+    });
+    const avgKills=(totalKills/total).toFixed(1);
+    const bestPlace=Math.min(...fg.map(g=>g.placement||999));
+    return{total,wins,winRate:((wins/total)*100).toFixed(0)+'%',avgPlace,avgKills,totalKills,bestPlace:bestPlace===999?'-':bestPlace,top5,top10,playerKills};
+  }
+
+  function renderPlayerFilters(){
+    const container=$('player-filters');
+    // Gather all unique player names from games + known players
+    const allNames=new Set(knownPlayers);
+    games.forEach(g=>(g.players||[]).forEach(p=>allNames.add(p.name)));
+    const sorted=[...allNames].sort();
+    // Keep the label, rebuild buttons
+    container.innerHTML='<span style="font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-right:4px;">Filter:</span>';
+    // "All" button
+    const allBtn=document.createElement('button');
+    allBtn.className='pf-btn pf-all'+(selectedPlayers.size===0?' pf-active':'');
+    allBtn.textContent='All';
+    allBtn.onclick=()=>{selectedPlayers.clear();renderTracker();};
+    container.appendChild(allBtn);
+    // Per-player buttons
+    sorted.forEach(name=>{
+      const btn=document.createElement('button');
+      btn.className='pf-btn'+(selectedPlayers.has(name)?' pf-active':'');
+      btn.textContent=name;
+      btn.onclick=()=>{
+        if(selectedPlayers.has(name)){selectedPlayers.delete(name);}
+        else{selectedPlayers.add(name);}
+        renderTracker();
+      };
+      container.appendChild(btn);
+    });
+  }
+
+  function renderTracker(){
+    renderPlayerFilters();
+    const fg=getFilteredGames();
+    const stats=computeStats(fg);
+    // Build stats cards — add per-player kill breakdown if filtering
+    let extraCards='';
+    if(selectedPlayers.size>0){
+      [...selectedPlayers].forEach(name=>{
+        const k=stats.playerKills[name]||0;
+        const avg=fg.length?(k/fg.length).toFixed(1):'0';
+        extraCards+=`<div class="stat-card"><div class="stat-value">${k}</div><div class="stat-label">${name} Kills</div></div>`;
+        extraCards+=`<div class="stat-card"><div class="stat-value">${avg}</div><div class="stat-label">${name} Avg K</div></div>`;
+      });
+    }
+    $('stats-grid').innerHTML=`
+      <div class="stat-card"><div class="stat-value">${stats.total}</div><div class="stat-label">Games</div></div>
+      <div class="stat-card"><div class="stat-value">${stats.wins}</div><div class="stat-label">Wins</div></div>
+      <div class="stat-card"><div class="stat-value">${stats.winRate}</div><div class="stat-label">Win Rate</div></div>
+      <div class="stat-card"><div class="stat-value">${stats.avgPlace}</div><div class="stat-label">Avg Place</div></div>
+      <div class="stat-card"><div class="stat-value">${stats.bestPlace}</div><div class="stat-label">Best</div></div>
+      <div class="stat-card"><div class="stat-value">${stats.totalKills}</div><div class="stat-label">Total Kills</div></div>
+      <div class="stat-card"><div class="stat-value">${stats.avgKills}</div><div class="stat-label">Avg Kills/Game</div></div>
+      <div class="stat-card"><div class="stat-value">${stats.top5}</div><div class="stat-label">Top 5s</div></div>
+      ${extraCards}
+    `;
+    renderGameTable(fg);
+  }
+
+  function placementClass(p){
+    if(p===1)return'placement-win';
+    if(p<=5)return'placement-top5';
+    if(p<=10)return'placement-top10';
+    return'';
+  }
+
+  function formatDate(d){
+    if(!d)return'-';
+    // Handle datetime-local format: 2025-03-20T14:30 or legacy date-only: 2025-03-20
+    const tIdx=d.indexOf('T');
+    const datePart=tIdx>-1?d.slice(0,tIdx):d;
+    const timePart=tIdx>-1?d.slice(tIdx+1):'';
+    const parts=datePart.split('-');
+    let out=parts.length===3?parts[2]+'/'+parts[1]+'/'+parts[0]:datePart;
+    if(timePart)out+=' '+timePart;
+    return out;
+  }
+
+  function renderGameTable(filteredGames){
+    const fg=filteredGames||getFilteredGames();
+    const table=$('game-table');
+    if(!fg.length){table.innerHTML='<tr><td class="game-empty" colspan="7">'+(games.length?'No games match the selected filter.':'No games logged yet. Hit "+ Log Game" to start tracking!')+'</td></tr>';return;}
+    let html='<thead><tr><th>Date</th><th>#</th><th>Players</th><th>Kills</th><th>Location</th><th>Notes</th><th></th></tr></thead><tbody>';
+    fg.forEach(g=>{
+      const players=(g.players||[]).map(p=>p.name).join(', ')||'-';
+      // If filtering, show only selected players' kills; otherwise total
+      let kills;
+      if(selectedPlayers.size){
+        kills=(g.players||[]).filter(p=>selectedPlayers.has(p.name)).reduce((s,p)=>s+(p.kills||0),0);
+      }else{
+        kills=(g.players||[]).reduce((s,p)=>s+(p.kills||0),0);
+      }
+      const loc=g.locationPOI||(g.locationX?Math.round(g.locationX)+','+Math.round(g.locationY):'-');
+      const pClass=placementClass(g.placement);
+      html+=`<tr data-gid="${g.id}" style="cursor:pointer;">
+        <td>${formatDate(g.date)}</td>
+        <td class="${pClass}">${g.placement===1?'🏆 1':g.placement||'-'}</td>
+        <td>${players}</td>
+        <td>${kills}</td>
+        <td>${loc}</td>
+        <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${(g.notes||'').replace(/"/g,'&quot;')}">${g.notes||'-'}</td>
+        <td style="white-space:nowrap;"><button class="game-edit" data-gid="${g.id}" title="Edit" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:2px 5px;border-radius:4px;">✏️</button><button class="game-del" data-gid="${g.id}" title="Delete">×</button></td>
+      </tr>`;
+    });
+    html+='</tbody>';
+    table.innerHTML=html;
+    table.querySelectorAll('.game-del').forEach(btn=>{
+      btn.onclick=e=>{
+        e.stopPropagation();
+        const gid=btn.dataset.gid;
+        if(!confirm('Delete this game?'))return;
+        if(gamesRef)gamesRef.child(gid).remove();
+      };
+    });
+    table.querySelectorAll('.game-edit').forEach(btn=>{
+      btn.onclick=e=>{
+        e.stopPropagation();
+        const g=games.find(g=>g.id===btn.dataset.gid);
+        if(g)openLogForm(g);
+      };
+    });
+  }
+
+  // ── LOG GAME FORM ──
+  $('gf-cancel').onclick=()=>closeLogForm();
+  $('gf-save').onclick=()=>saveGame();
+  $('gf-add-player').onclick=()=>addPlayerRow('',0);
+  $('gf-location-btn').onclick=()=>startLocationPick();
+
+  function openLogForm(existingGame){
+    editingGameId=existingGame?existingGame.id:null;
+    $('log-form-title').textContent=existingGame?'Edit Game':'Log Game';
+    function getIrishNow(){
+      const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Dublin'}));
+      const pad=n=>String(n).padStart(2,'0');
+      return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
+    }
+    $('gf-date').value=existingGame?existingGame.date:getIrishNow();
+    $('gf-placement').value=existingGame?existingGame.placement:'';
+    $('gf-notes').value=existingGame?existingGame.notes||'':'';
+    pickedLocation=existingGame&&existingGame.locationX?{x:existingGame.locationX,y:existingGame.locationY,poi:existingGame.locationPOI}:null;
+    updateLocationPreview();
+    // Players
+    $('gf-players').innerHTML='';
+    if(existingGame&&existingGame.players){
+      existingGame.players.forEach(p=>addPlayerRow(p.name,p.kills||0));
+    }else{
+      addPlayerRow('Seán',0);addPlayerRow('Vicky',0);addPlayerRow('Adam',0);
+    }
+    logFormOverlay.classList.add('show');
+  }
+
+  function closeLogForm(){logFormOverlay.classList.remove('show');editingGameId=null;pickedLocation=null;}
+
+  function addPlayerRow(name,kills){
+    const row=document.createElement('div');row.className='player-row';
+    row.style.position='relative';
+    row.innerHTML=`<input type="text" class="player-name" placeholder="Player name" value="${name}" autocomplete="off"><input type="number" class="kills-input" placeholder="K" min="0" value="${kills||''}"><button class="remove-player">×</button>`;
+    row.querySelector('.remove-player').onclick=()=>{if($('gf-players').children.length>1)row.remove();};
+    // Autocomplete
+    const nameInput=row.querySelector('.player-name');
+    nameInput.onfocus=()=>showPlayerSuggestions(nameInput,row);
+    nameInput.oninput=()=>showPlayerSuggestions(nameInput,row);
+    nameInput.onblur=()=>setTimeout(()=>{const s=row.querySelector('.player-suggest');if(s)s.remove();},150);
+    $('gf-players').appendChild(row);
+  }
+
+  function showPlayerSuggestions(input,row){
+    let existing=row.querySelector('.player-suggest');
+    if(existing)existing.remove();
+    const val=input.value.toLowerCase().trim();
+    const matches=knownPlayers.filter(p=>p.toLowerCase().includes(val)&&p.toLowerCase()!==val).slice(0,5);
+    if(!matches.length)return;
+    const box=document.createElement('div');box.className='player-suggest';
+    const rect=input.getBoundingClientRect(),rowRect=row.getBoundingClientRect();
+    box.style.top=(rect.bottom-rowRect.top+2)+'px';
+    box.style.left=(rect.left-rowRect.left)+'px';
+    box.style.width=rect.width+'px';
+    matches.forEach(m=>{
+      const item=document.createElement('div');item.className='player-suggest-item';
+      item.textContent=m;
+      item.onmousedown=e=>{e.preventDefault();input.value=m;box.remove();};
+      box.appendChild(item);
+    });
+    row.appendChild(box);
+  }
+
+  function updateLocationPreview(){
+    const btn=$('gf-location-btn');
+    const preview=$('gf-location-preview');
+    if(pickedLocation){
+      btn.classList.add('has-location');
+      btn.textContent='✓ Location set — click to change';
+      const poi=pickedLocation.poi?' (near '+pickedLocation.poi+')':'';
+      preview.textContent=Math.round(pickedLocation.x)+', '+Math.round(pickedLocation.y)+poi;
+    }else{
+      btn.classList.remove('has-location');
+      btn.textContent='Click to set on map';
+      preview.textContent='';
+    }
+  }
+
+  // ── LOCATION PICKING ──
+  let pickDragThreshold=8; // pixels — if moved less than this, treat as a click
+  function startLocationPick(){
+    pickingLocation=true;
+    logFormOverlay.classList.remove('show');
+    trackerOverlay.classList.remove('show');
+    modeToggle.innerHTML='📍 <span>Click map</span>';
+    modeToggle.style.background='#ffd600';modeToggle.style.color='#000';
+    // Show map tools for pan/zoom, hide tracker tools
+    mapToolsEl.style.display='contents';
+    trackerToolsEl.style.display='none';
+    zoomInd.style.display='flex';
+    panFloatEl.style.display='flex';
+    canvasWrap.style.cursor='crosshair';
+    setTool('pan');
+  }
+
+  function finishLocationPick(pos){
+    pickingLocation=false;
+    canvasWrap.style.cursor='';
+    // Find nearest POI
+    let nearestPOI=null,nearestDist=Infinity;
+    poiData.forEach(p=>{const d=Math.hypot(p.x-pos.x,p.y-pos.y);if(d<nearestDist){nearestDist=d;nearestPOI=p.name;}});
+    if(nearestDist>150)nearestPOI=null;
+    pickedLocation={x:pos.x,y:pos.y,poi:nearestPOI};
+    updateLocationPreview();
+    // Return to tracker + form
+    trackerOverlay.classList.add('show');
+    trackerMode=true;
+    modeToggle.classList.add('tracker-active');
+    modeToggle.innerHTML='🗺️ <span>Map</span>';
+    modeToggle.style.background='';modeToggle.style.color='';
+    mapToolsEl.style.display='none';
+    trackerToolsEl.style.display='contents';
+    zoomInd.style.display='none';
+    panFloatEl.style.display='none';
+    logFormOverlay.classList.add('show');
+  }
+
+  // Hook into canvas for location picking — allow pan/zoom, detect clicks by measuring drag distance
+  let pickStartPos=null;
+  canvasWrap.addEventListener('mousedown',function(e){
+    if(pickingLocation&&e.button===0){pickStartPos={x:e.clientX,y:e.clientY};}
+  },true);
+  canvasWrap.addEventListener('mouseup',function(e){
+    if(pickingLocation&&e.button===0&&pickStartPos){
+      const dist=Math.hypot(e.clientX-pickStartPos.x,e.clientY-pickStartPos.y);
+      pickStartPos=null;
+      if(dist<pickDragThreshold){
+        // It was a click, not a drag
+        finishLocationPick(canvasCoords(e));
+      }
+    }
+  },true);
+  canvasWrap.addEventListener('touchstart',function(e){
+    if(pickingLocation&&e.touches.length===1){
+      pickStartPos={x:e.touches[0].clientX,y:e.touches[0].clientY};
+    }
+    // Don't prevent default — let pinch-zoom and pan work
+  },{capture:true,passive:true});
+  canvasWrap.addEventListener('touchend',function(e){
+    if(pickingLocation&&pickStartPos&&e.changedTouches.length===1){
+      const t=e.changedTouches[0];
+      const dist=Math.hypot(t.clientX-pickStartPos.x,t.clientY-pickStartPos.y);
+      pickStartPos=null;
+      if(dist<pickDragThreshold){
+        finishLocationPick(canvasCoords(t));
+      }
+    }
+  },{capture:true,passive:true});
+
+  // ── SAVE GAME ──
+  function saveGame(){
+    const date=$('gf-date').value;
+    const placement=parseInt($('gf-placement').value)||null;
+    const notes=$('gf-notes').value.trim();
+    const playerEls=$('gf-players').querySelectorAll('.player-row');
+    const players=[];
+    playerEls.forEach(row=>{
+      const name=row.querySelector('.player-name').value.trim();
+      const kills=parseInt(row.querySelector('.kills-input').value)||0;
+      if(name)players.push({name,kills});
+    });
+    if(!placement){alert('Please enter a placement.');return;}
+    if(!players.length){alert('Please add at least one player.');return;}
+
+    // Update known players
+    const newNames=players.map(p=>p.name).filter(n=>!knownPlayers.includes(n));
+    if(newNames.length){
+      knownPlayers=[...new Set([...knownPlayers,...newNames])].sort();
+      if(playersRef)playersRef.set(knownPlayers);
+    }
+
+    const gameData={
+      date,placement,players,notes,
+      locationX:pickedLocation?pickedLocation.x:null,
+      locationY:pickedLocation?pickedLocation.y:null,
+      locationPOI:pickedLocation?pickedLocation.poi:null,
+      createdAt:Date.now()
+    };
+
+    if(gamesRef){
+      if(editingGameId){
+        gamesRef.child(editingGameId).set(gameData);
+      }else{
+        gamesRef.push(gameData);
+      }
+    }
+    closeLogForm();
+  }
+
+  // ── CSV EXPORT ──
+  function exportGamesCSV(){
+    if(!games.length){alert('No games to export.');return;}
+    const headers=['Date','Placement','Players','Total Kills','Kill Breakdown','Location','Notes'];
+    const rows=games.map(g=>{
+      const players=(g.players||[]).map(p=>p.name).join('; ');
+      const totalKills=(g.players||[]).reduce((s,p)=>s+(p.kills||0),0);
+      const breakdown=(g.players||[]).map(p=>p.name+':'+p.kills).join('; ');
+      const loc=g.locationPOI||(g.locationX?Math.round(g.locationX)+','+Math.round(g.locationY):'');
+      return[formatDate(g.date),g.placement,players,totalKills,breakdown,loc,(g.notes||'').replace(/"/g,'""')].map(v=>'"'+v+'"').join(',');
+    });
+    const csv=headers.join(',')+'\n'+rows.join('\n');
+    const blob=new Blob([csv],{type:'text/csv'});
+    const link=document.createElement('a');
+    link.download='fn-games-'+new Date().toISOString().slice(0,10)+'.csv';
+    link.href=URL.createObjectURL(blob);link.click();
+    URL.revokeObjectURL(link.href);
+  }
 
 })();
 </script>

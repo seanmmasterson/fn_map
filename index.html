@@ -175,7 +175,7 @@
   <button class="tbtn" id="sync-status-btn" title="Show sync status"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></button>
 </div>
 <div id="helpbar" class="hidden"><span><kbd>D</kbd> draw</span><span><kbd>A</kbd> arrow</span><span><kbd>C</kbd> shape</span><span><kbd>W</kbd> waypoint</span><span><kbd>N</kbd> new route</span><span><kbd>M</kbd> pin</span><span><kbd>T</kbd> text</span><span><kbd>E</kbd> eraser (click object to delete)</span><span><kbd>Space</kbd> pan</span><span><kbd>Scroll</kbd> zoom</span><span><kbd>Ctrl+Z/Y</kbd> undo/redo</span><span>Double-tap WP=delete</span><div class="help-opacity">Opacity <input type="range" min="10" max="100" value="100" id="opacity-slider"></div><button class="help-close" id="help-close">&times;</button></div>
-<div id="canvas-wrap"><div id="transform-group"><img id="map-image" alt="Map"><div id="draw-objects-layer"></div><canvas id="preview-canvas"></canvas><svg id="waypoint-lines"></svg><div id="poi-layer"></div><div id="markers-layer"></div></div></div>
+<div id="canvas-wrap"><div id="transform-group"><img id="map-image" alt="Map"><div id="draw-objects-layer"></div><canvas id="preview-canvas"></canvas><svg id="waypoint-lines"></svg><div id="poi-layer"></div><div id="pins-layer"></div><div id="markers-layer"></div></div></div>
 <div id="zoom-ind"><button id="zoom-out">−</button><span id="zoom-pct">100%</span><button id="zoom-in">+</button><button id="zoom-fit" style="font-size:11px;width:auto;padding:0 6px;">Fit</button></div>
 <button id="pan-float" title="Pan mode" style="position:fixed;bottom:10px;right:10px;width:40px;height:40px;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;z-index:100;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:all .15s;"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 11V6a2 2 0 00-4 0v1M14 10V4a2 2 0 00-4 0v6M10 10.5V6a2 2 0 00-4 0v8"/><path d="M18 8a2 2 0 014 0v7a8 8 0 01-8 8h-2c-2.8 0-4.5-.9-5.9-2.6L3 16.3A1.5 1.5 0 013 14l.6-.6a2 2 0 012.6 0L10 17"/></svg></button>
 <div id="save-status" style="position:fixed;top:14px;right:10px;background:transparent;border:none;padding:0 6px;font-family:var(--font-display);font-weight:600;font-size:10px;color:var(--muted);z-index:101;pointer-events:none;display:none;">Loading...</div>
@@ -205,6 +205,7 @@
   const previewCanvas=$('preview-canvas'),pctx=previewCanvas.getContext('2d');
   const drawObjectsLayer=$('draw-objects-layer');
   const markersLayer=$('markers-layer');
+  const pinsLayer=$('pins-layer');
   const textDialog=$('text-dialog'),textInput=$('text-input');
   const routeDialog=$('route-name-dialog'),routeNameInput=$('route-name-input');
   const wpRenameDialog=$('wp-rename-dialog'),wpRenameInput=$('wp-rename-input');
@@ -263,7 +264,11 @@
       o.canvas.classList.remove('erasable','erase-hover');
       o.canvas.style.pointerEvents='none';
     });
-    markersLayer.querySelectorAll('.marker,.text-label').forEach(el=>{
+    markersLayer.querySelectorAll('.text-label').forEach(el=>{
+      if(isEraser){el.style.cursor='pointer';el._eraserClick=e=>{e.stopPropagation();el.remove();scheduleSave&&scheduleSave();};el.addEventListener('click',el._eraserClick);}
+      else{el.style.cursor='move';if(el._eraserClick){el.removeEventListener('click',el._eraserClick);delete el._eraserClick;}}
+    });
+    pinsLayer.querySelectorAll('.marker').forEach(el=>{
       if(isEraser){el.style.cursor='pointer';el._eraserClick=e=>{e.stopPropagation();el.remove();scheduleSave&&scheduleSave();};el.addEventListener('click',el._eraserClick);}
       else{el.style.cursor='move';if(el._eraserClick){el.removeEventListener('click',el._eraserClick);delete el._eraserClick;}}
     });
@@ -454,6 +459,11 @@
       el.style.padding=markerPad+'px '+(markerPad+2)+'px';
       el.style.borderRadius=markerRadius+'px';
     });
+    pinsLayer.querySelectorAll('.marker').forEach(el=>{
+      el.style.fontSize=markerSize+'px';
+      el.style.padding=markerPad+'px '+(markerPad+2)+'px';
+      el.style.borderRadius=markerRadius+'px';
+    });
   }
 
   document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
@@ -495,7 +505,7 @@
     $('coord-mode-btn').style.background=coordMode?'rgba(255,214,0,0.2)':'';
     if(coordMode){
       // Scan all markers on the map
-      const markers=markersLayer.querySelectorAll('.marker');
+      const markers=pinsLayer.querySelectorAll('.marker');
       if(markers.length===0){alert('No symbols on the map to log.');coordMode=false;$('coord-mode-btn').classList.remove('active');$('coord-mode-btn').style.background='';return;}
       const log=[];
       markers.forEach(el=>{
@@ -608,8 +618,8 @@
     el.style.border='1.5px solid rgba(255,255,255,0.4)';
     el.style.display='flex';el.style.alignItems='center';el.style.justifyContent='center';
     el.style.filter='drop-shadow(0 2px 6px rgba(0,0,0,0.7))';
-    makeDraggable(el);el.oncontextmenu=e=>{e.preventDefault();el.remove();};
-    markersLayer.appendChild(el);pushElementUndo(el);
+    makeDraggable(el);el.oncontextmenu=e=>{e.preventDefault();el.remove();scheduleSave();};
+    pinsLayer.appendChild(el);pushElementUndo(el);
   }
 
   function placeWaypoint(pos){if(currentRouteId===1&&!firstRouteNamed&&waypointCounter===0){firstRouteNamed=true;showRouteNameDialog('Name Route 1','Player name (e.g. IGL)',n=>{if(n)routeNames[1]=n;doPlaceWaypoint(pos);});return;}doPlaceWaypoint(pos);}
@@ -647,20 +657,29 @@
     else if(en.type==='element'){markersLayer.appendChild(en.el);if(en.el.classList.contains('numbered-marker')){renumberWaypoints();redrawWaypointLines();refreshWpPanel();}}
     else if(en.type==='element-removed'){if(en.el.parentNode)en.el.remove();if(en.el.classList.contains('numbered-marker')){renumberWaypoints();redrawWaypointLines();refreshWpPanel();}}}
 
-  $('clear-btn').onclick=()=>{if(!confirm('Clear all?'))return;drawObjects.forEach(o=>o.canvas.remove());drawObjects=[];drawObjectsLayer.innerHTML='';markersLayer.innerHTML='';waypointCounter=0;undoStack=[];redoStack=[];currentRouteId=1;routeNames={};wpNames={};selectedWpEl=null;firstRouteNamed=false;redrawWaypointLines();refreshWpPanel();};
+  $('clear-btn').onclick=()=>{if(!confirm('Clear all?'))return;drawObjects.forEach(o=>o.canvas.remove());drawObjects=[];drawObjectsLayer.innerHTML='';markersLayer.innerHTML='';pinsLayer.innerHTML='';waypointCounter=0;undoStack=[];redoStack=[];currentRouteId=1;routeNames={};wpNames={};selectedWpEl=null;firstRouteNamed=false;redrawWaypointLines();refreshWpPanel();};
 
   // ── VIEWS ──
   function captureState(){
     // Serialize draw objects as data URLs
     const doData=drawObjects.map(o=>({type:o.type,dataUrl:o.canvas.toDataURL()}));
+    // markersLayer now only has waypoints + text (pins are in pinsLayer, excluded from view state)
     return{drawObjects:doData,markersHTML:markersLayer.innerHTML,routeNames:JSON.parse(JSON.stringify(routeNames)),wpNames:JSON.parse(JSON.stringify(wpNames)),currentRouteId,waypointCounter,color};
+  }
+  function stripPinsFromHTML(html){
+    // Retroactively remove .marker elements from saved view HTML
+    const tmp=document.createElement('div');tmp.innerHTML=html;
+    tmp.querySelectorAll('.marker').forEach(el=>el.remove());
+    return tmp.innerHTML;
   }
   function restoreState(st){
     drawObjects.forEach(o=>o.canvas.remove());drawObjects=[];drawObjectsLayer.innerHTML='';
     if(st.drawObjects){st.drawObjects.forEach(d=>{const c=createDrawCanvas(),cx=c.getContext('2d');const img=new Image();img.onload=()=>cx.drawImage(img,0,0);img.src=d.dataUrl;const id=++drawIdCounter;c.dataset.drawId=id;drawObjects.push({id,type:d.type,canvas:c});drawObjectsLayer.appendChild(c);c.style.opacity=drawOpacity;});}
-    markersLayer.innerHTML=st.markersHTML;routeNames=JSON.parse(JSON.stringify(st.routeNames));wpNames=JSON.parse(JSON.stringify(st.wpNames||{}));currentRouteId=st.currentRouteId;waypointCounter=st.waypointCounter;
+    // Strip any legacy pins from markersHTML before restoring
+    markersLayer.innerHTML=stripPinsFromHTML(st.markersHTML||'');routeNames=JSON.parse(JSON.stringify(st.routeNames));wpNames=JSON.parse(JSON.stringify(st.wpNames||{}));currentRouteId=st.currentRouteId;waypointCounter=st.waypointCounter;
     if(st.color){color=st.color;document.querySelectorAll('.cdot').forEach(d=>d.classList.toggle('active',d.dataset.color===color));}
-    selectedWpEl=null;markersLayer.querySelectorAll('.numbered-marker').forEach(el=>setupWaypointEvents(el));markersLayer.querySelectorAll('.marker').forEach(el=>{makeDraggable(el);el.oncontextmenu=e=>{e.preventDefault();el.remove();};});markersLayer.querySelectorAll('.text-label').forEach(el=>{makeDraggable(el);el.oncontextmenu=e=>{e.preventDefault();el.remove();};});
+    // pinsLayer is NOT touched here — pins persist across view switches
+    selectedWpEl=null;markersLayer.querySelectorAll('.numbered-marker').forEach(el=>setupWaypointEvents(el));markersLayer.querySelectorAll('.text-label').forEach(el=>{makeDraggable(el);el.oncontextmenu=e=>{e.preventDefault();el.remove();};});
     redrawWaypointLines();undoStack=[];redoStack=[];refreshWpPanel();updateEraserMode();
   }
 
@@ -693,7 +712,10 @@
     const ec=document.createElement('canvas');ec.width=mapImg.naturalWidth;ec.height=mapImg.naturalHeight;const ectx=ec.getContext('2d');ectx.drawImage(mapImg,0,0);
     drawObjects.forEach(o=>{ectx.globalAlpha=drawOpacity;ectx.drawImage(o.canvas,0,0);});ectx.globalAlpha=1;
     const groups=getRouteGroups();Object.keys(groups).forEach(rid=>{const wpts=groups[rid];for(let i=0;i<wpts.length-1;i++){const a=wpts[i],b=wpts[i+1],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);if(d<30)continue;const p=16,x1=a.x+(dx/d)*p,y1=a.y+(dy/d)*p,x2=b.x-(dx/d)*p,y2=b.y-(dy/d)*p,c=a.color||'#fff';ectx.globalAlpha=.8;ectx.strokeStyle=c;ectx.lineWidth=2.5;ectx.setLineDash([10,5]);ectx.beginPath();ectx.moveTo(x1,y1);ectx.lineTo(x2,y2);ectx.stroke();ectx.setLineDash([]);const ang=Math.atan2(y2-y1,x2-x1);ectx.fillStyle=c;ectx.globalAlpha=.85;ectx.beginPath();ectx.moveTo(x2,y2);ectx.lineTo(x2-10*Math.cos(ang-.4),y2-10*Math.sin(ang-.4));ectx.lineTo(x2-10*Math.cos(ang+.4),y2-10*Math.sin(ang+.4));ectx.closePath();ectx.fill();ectx.globalAlpha=1;}});
-    markersLayer.querySelectorAll('.marker,.text-label,.numbered-marker').forEach(el=>{const x=parseFloat(el.style.left),y=parseFloat(el.style.top);if(el.classList.contains('text-label')){const sz=parseInt(el.style.fontSize)||18;ectx.font=`700 ${sz}px "Exo 2",sans-serif`;ectx.textAlign='center';ectx.textBaseline='middle';const tm=ectx.measureText(el.textContent);ectx.fillStyle='rgba(0,0,0,0.6)';ectx.fillRect(x-tm.width/2-8,y-sz/2-2,tm.width+16,sz+6);ectx.fillStyle=el.style.color;ectx.fillText(el.textContent,x,y);}else if(el.classList.contains('numbered-marker')){ectx.fillStyle=el.style.background;ectx.beginPath();ectx.arc(x,y,13,0,Math.PI*2);ectx.fill();ectx.strokeStyle='rgba(255,255,255,0.3)';ectx.lineWidth=2;ectx.beginPath();ectx.arc(x,y,13,0,Math.PI*2);ectx.stroke();ectx.fillStyle='#000';ectx.font='800 13px "Exo 2",sans-serif';ectx.textAlign='center';ectx.textBaseline='middle';ectx.fillText(el.dataset.wpIndex||el.textContent,x,y);const rid=el.dataset.routeId,name=routeNames[rid];if(name&&el.dataset.wpIndex==='1'){ectx.font='700 9px "Exo 2",sans-serif';const tm=ectx.measureText(name);ectx.fillStyle='rgba(0,0,0,0.6)';ectx.fillRect(x-tm.width/2-5,y-22,tm.width+10,14);ectx.fillStyle='#fff';ectx.fillText(name.toUpperCase(),x,y-15);}}else if(el.classList.contains('marker')){const mt=el.dataset.markerType||'pin',cols={pin:color,reboot:'#2d8cff',slurp:'#00c8ff',launchpad:'#ff6b2b'},labs={pin:'📍',reboot:'🚑',slurp:'💦',launchpad:'🚀'};ectx.fillStyle=cols[mt]||'#fff';ectx.beginPath();ectx.arc(x,y,12,0,Math.PI*2);ectx.fill();ectx.strokeStyle='rgba(255,255,255,0.5)';ectx.lineWidth=1.5;ectx.beginPath();ectx.arc(x,y,12,0,Math.PI*2);ectx.stroke();ectx.font='14px serif';ectx.textAlign='center';ectx.textBaseline='middle';ectx.fillText(labs[mt]||'📍',x,y);}});
+    // Render waypoints and text from markersLayer
+    markersLayer.querySelectorAll('.text-label,.numbered-marker').forEach(el=>{const x=parseFloat(el.style.left),y=parseFloat(el.style.top);if(el.classList.contains('text-label')){const sz=parseInt(el.style.fontSize)||18;ectx.font=`700 ${sz}px "Exo 2",sans-serif`;ectx.textAlign='center';ectx.textBaseline='middle';const tm=ectx.measureText(el.textContent);ectx.fillStyle='rgba(0,0,0,0.6)';ectx.fillRect(x-tm.width/2-8,y-sz/2-2,tm.width+16,sz+6);ectx.fillStyle=el.style.color;ectx.fillText(el.textContent,x,y);}else if(el.classList.contains('numbered-marker')){ectx.fillStyle=el.style.background;ectx.beginPath();ectx.arc(x,y,13,0,Math.PI*2);ectx.fill();ectx.strokeStyle='rgba(255,255,255,0.3)';ectx.lineWidth=2;ectx.beginPath();ectx.arc(x,y,13,0,Math.PI*2);ectx.stroke();ectx.fillStyle='#000';ectx.font='800 13px "Exo 2",sans-serif';ectx.textAlign='center';ectx.textBaseline='middle';ectx.fillText(el.dataset.wpIndex||el.textContent,x,y);const rid=el.dataset.routeId,name=routeNames[rid];if(name&&el.dataset.wpIndex==='1'){ectx.font='700 9px "Exo 2",sans-serif';const tm=ectx.measureText(name);ectx.fillStyle='rgba(0,0,0,0.6)';ectx.fillRect(x-tm.width/2-5,y-22,tm.width+10,14);ectx.fillStyle='#fff';ectx.fillText(name.toUpperCase(),x,y-15);}}});
+    // Render global pins from pinsLayer
+    pinsLayer.querySelectorAll('.marker').forEach(el=>{const x=parseFloat(el.style.left),y=parseFloat(el.style.top);const mt=el.dataset.markerType||'pin',cols={pin:color,reboot:'#2d8cff',slurp:'#00c8ff',launchpad:'#ff6b2b'},labs={pin:'📍',reboot:'🚑',slurp:'💦',launchpad:'🚀'};ectx.fillStyle=cols[mt]||'#fff';ectx.beginPath();ectx.arc(x,y,12,0,Math.PI*2);ectx.fill();ectx.strokeStyle='rgba(255,255,255,0.5)';ectx.lineWidth=1.5;ectx.beginPath();ectx.arc(x,y,12,0,Math.PI*2);ectx.stroke();ectx.font='14px serif';ectx.textAlign='center';ectx.textBaseline='middle';ectx.fillText(labs[mt]||'📍',x,y);});
     const link=document.createElement('a');link.download='rotation-plan.png';link.href=ec.toDataURL('image/png');link.click();
   };
 
@@ -762,6 +784,7 @@
         version:1,
         drawObjects:drawObjects.map(o=>({type:o.type,dataUrl:o.canvas.toDataURL()})),
         markersHTML:markersLayer.innerHTML,
+        globalPinsHTML:pinsLayer.innerHTML,
         routeNames:JSON.parse(JSON.stringify(routeNames)),
         wpNames:JSON.parse(JSON.stringify(wpNames)),
         currentRouteId,waypointCounter,color,
@@ -795,17 +818,29 @@
           drawObjects.push({id,type:d.type,canvas:c});
           drawObjectsLayer.appendChild(c);c.style.opacity=drawOpacity;
         });}
-        if(data.markersHTML)markersLayer.innerHTML=data.markersHTML;
+        if(data.markersHTML)markersLayer.innerHTML=stripPinsFromHTML(data.markersHTML);
+        // Restore global pins
+        if(data.globalPinsHTML){
+          pinsLayer.innerHTML=data.globalPinsHTML;
+        } else {
+          // Migration: extract pins from legacy markersHTML
+          pinsLayer.innerHTML='';
+          const tmp=document.createElement('div');tmp.innerHTML=data.markersHTML||'';
+          tmp.querySelectorAll('.marker').forEach(el=>pinsLayer.appendChild(el.cloneNode(true)));
+        }
         if(data.routeNames)routeNames=JSON.parse(JSON.stringify(data.routeNames));
         if(data.wpNames)wpNames=JSON.parse(JSON.stringify(data.wpNames));
         if(data.currentRouteId)currentRouteId=data.currentRouteId;
         if(data.waypointCounter)waypointCounter=data.waypointCounter;
         if(data.color){color=data.color;document.querySelectorAll('.cdot').forEach(d=>d.classList.toggle('active',d.dataset.color===color));}
         markersLayer.querySelectorAll('.numbered-marker').forEach(el=>setupWaypointEvents(el));
-        markersLayer.querySelectorAll('.marker').forEach(el=>{makeDraggable(el);el.oncontextmenu=e=>{e.preventDefault();el.remove();};});
+        pinsLayer.querySelectorAll('.marker').forEach(el=>{makeDraggable(el);el.oncontextmenu=e=>{e.preventDefault();el.remove();scheduleSave();};});
         markersLayer.querySelectorAll('.text-label').forEach(el=>{makeDraggable(el);el.oncontextmenu=e=>{e.preventDefault();el.remove();};});
         redrawWaypointLines();refreshWpPanel();updateEraserMode();
-        if(data.views){views=data.views.map(v=>({name:v.name,indent:v.indent||0,state:v.state}));}
+        if(data.views){views=data.views.map(v=>{
+          if(v.state&&v.state.markersHTML)v.state.markersHTML=stripPinsFromHTML(v.state.markersHTML);
+          return{name:v.name,indent:v.indent||0,state:v.state};
+        });}
         if(typeof data.activeViewIdx==='number')activeViewIdx=data.activeViewIdx;
         renderViewsList();
         undoStack=[];redoStack=[];
@@ -846,6 +881,7 @@
       const data={
         drawObjects:drawObjects.map(o=>({type:o.type,dataUrl:o.canvas.toDataURL()})),
         markersHTML:markersLayer.innerHTML,
+        globalPinsHTML:pinsLayer.innerHTML,
         routeNames:JSON.parse(JSON.stringify(routeNames)),
         wpNames:JSON.parse(JSON.stringify(wpNames)),
         currentRouteId,waypointCounter,color,
@@ -881,8 +917,17 @@
         drawObjects.push({id,type:d.type,canvas:c});
         drawObjectsLayer.appendChild(c);c.style.opacity=drawOpacity;
       });}
-      // Restore markers
-      if(data.markersHTML)markersLayer.innerHTML=data.markersHTML;
+      // Restore markers — strip any legacy pins from markersHTML (they now live in pinsLayer)
+      if(data.markersHTML)markersLayer.innerHTML=stripPinsFromHTML(data.markersHTML);
+      // Restore global pins
+      if(data.globalPinsHTML){
+        pinsLayer.innerHTML=data.globalPinsHTML;
+      } else {
+        // Migration: extract pins from legacy markersHTML into pinsLayer
+        const tmp=document.createElement('div');tmp.innerHTML=data.markersHTML||'';
+        const legacyPins=tmp.querySelectorAll('.marker');
+        legacyPins.forEach(el=>pinsLayer.appendChild(el.cloneNode(true)));
+      }
       if(data.routeNames)routeNames=JSON.parse(JSON.stringify(data.routeNames));
       if(data.wpNames)wpNames=JSON.parse(JSON.stringify(data.wpNames));
       if(data.currentRouteId)currentRouteId=data.currentRouteId;
@@ -890,11 +935,14 @@
       if(data.color){color=data.color;document.querySelectorAll('.cdot').forEach(d=>d.classList.toggle('active',d.dataset.color===color));}
       // Re-attach events
       markersLayer.querySelectorAll('.numbered-marker').forEach(el=>setupWaypointEvents(el));
-      markersLayer.querySelectorAll('.marker').forEach(el=>{makeDraggable(el);el.oncontextmenu=e=>{e.preventDefault();el.remove();};});
+      pinsLayer.querySelectorAll('.marker').forEach(el=>{makeDraggable(el);el.oncontextmenu=e=>{e.preventDefault();el.remove();scheduleSave();};});
       markersLayer.querySelectorAll('.text-label').forEach(el=>{makeDraggable(el);el.oncontextmenu=e=>{e.preventDefault();el.remove();};});
       redrawWaypointLines();refreshWpPanel();updateEraserMode();
-      // Restore views
-      if(data.views){views=data.views.map(v=>({name:v.name,indent:v.indent||0,state:v.state}));}
+      // Restore views — retroactively strip pins from saved view states
+      if(data.views){views=data.views.map(v=>{
+        if(v.state&&v.state.markersHTML)v.state.markersHTML=stripPinsFromHTML(v.state.markersHTML);
+        return{name:v.name,indent:v.indent||0,state:v.state};
+      });}
       if(typeof data.activeViewIdx==='number')activeViewIdx=data.activeViewIdx;
       renderViewsList();
       if(waypointCounter>0||Object.keys(routeNames).length>0)firstRouteNamed=true;

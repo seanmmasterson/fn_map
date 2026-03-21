@@ -662,6 +662,10 @@
     const nextColor=routeColors.find(c=>!usedColors.has(c))||routeColors[currentRouteId%routeColors.length];
     color=nextColor;
     document.querySelectorAll('.cdot').forEach(d=>d.classList.toggle('active',d.dataset.color===color));
+    // Clear route-active highlights from all waypoints
+    markersLayer.querySelectorAll('.numbered-marker').forEach(w=>w.classList.remove('route-active'));
+    redrawWaypointLines();
+    refreshWpPanel();
     showRouteNameDialog('New Route Name','Player name (e.g. IGL)',n=>{
       if(n)routeNames[currentRouteId]=n;
       setTool('waypoint');
@@ -1045,7 +1049,8 @@
     if(e.touches.length===2){
       // ALWAYS switch to pinch-zoom regardless of current tool
       // Cancel any pending or active single-finger operation
-      if(ts._pendingTimer){clearTimeout(ts._pendingTimer);ts._pendingTimer=null;ts.mode=null;}
+      if(ts._pendingTimer){clearTimeout(ts._pendingTimer);ts._pendingTimer=null;}
+      if(ts.mode==='tap-pending'||ts.mode==='pending')ts.mode=null;
       if(isDrawing&&currentStrokeCanvas){isDrawing=false;currentStrokeCanvas.remove();currentStrokeCanvas=null;currentStrokeCtx=null;strokeBounds=null;}
       if(isErasing)isErasing=false;
       if(arrowStart){arrowStart=null;clearPreview();}
@@ -1064,7 +1069,13 @@
       touchTapTime=now;touchTapPos=pos;
       if(tool==='pan'){ts.mode='pan1';ts.lastMid=pos;return;}
       if(tool==='eraser'){ts.mode='eraser';isErasing=true;eraserHitTest(canvasCoords(t));return;}
-      // For all other tools, delay action to allow second finger for pinch-zoom
+      // Tap-only tools (waypoint, marker, text) — wait for touchend to confirm it's a tap, not a pinch
+      if(tool==='waypoint'||tool==='marker'||tool==='text'){
+        ts.mode='tap-pending';
+        ts._pendingTouch={clientX:t.clientX,clientY:t.clientY};
+        return;
+      }
+      // For drag tools (draw, arrow, shape, ruler), delay action to allow second finger for pinch-zoom
       ts.mode='pending';
       ts._pendingTouch={clientX:t.clientX,clientY:t.clientY};
       ts._pendingTimer=setTimeout(()=>{
@@ -1072,7 +1083,7 @@
           ts.mode='draw';
           canvasWrap.onmousedown({button:0,clientX:ts._pendingTouch.clientX,clientY:ts._pendingTouch.clientY,preventDefault:()=>{}});
         }
-      },80);
+      },150);
     }
   },{passive:false});
   canvasWrap.addEventListener('touchmove',e=>{
@@ -1082,6 +1093,7 @@
       if(ts.mode!=='pinch'){
         // Transition to pinch mid-gesture — cancel any pending or active operation
         if(ts._pendingTimer){clearTimeout(ts._pendingTimer);ts._pendingTimer=null;}
+        if(ts.mode==='tap-pending')ts.mode=null;
         if(isDrawing&&currentStrokeCanvas){isDrawing=false;currentStrokeCanvas.remove();currentStrokeCanvas=null;currentStrokeCtx=null;strokeBounds=null;}
         if(isErasing)isErasing=false;
         if(arrowStart){arrowStart=null;clearPreview();}
@@ -1121,6 +1133,16 @@
     }
     if(ts.mode==='pan1'){ts.mode=null;return;}
     if(ts.mode==='eraser'){isErasing=false;ts.mode=null;return;}
+    if(ts.mode==='tap-pending'){
+      // Finger lifted cleanly — confirmed tap, fire the tool
+      const ct=e.changedTouches[0];
+      const dist=Math.hypot(ct.clientX-ts._pendingTouch.clientX,ct.clientY-ts._pendingTouch.clientY);
+      if(dist<15){
+        canvasWrap.onmousedown({button:0,clientX:ts._pendingTouch.clientX,clientY:ts._pendingTouch.clientY,preventDefault:()=>{}});
+        window.dispatchEvent(new MouseEvent('mouseup',{button:0,clientX:ct.clientX,clientY:ct.clientY}));
+      }
+      ts.mode=null;return;
+    }
     if(ts.mode==='pending'){
       // Finger lifted before timer — it was a quick tap, commit the action
       if(ts._pendingTimer){clearTimeout(ts._pendingTimer);ts._pendingTimer=null;}

@@ -1029,7 +1029,7 @@
           ts.mode='draw';
           canvasWrap.onmousedown({button:0,clientX:ts._pendingTouch.clientX,clientY:ts._pendingTouch.clientY,preventDefault:()=>{}});
         }
-      },150);
+      },200);
     }
   },{passive:false});
   canvasWrap.addEventListener('touchmove',e=>{
@@ -1059,11 +1059,14 @@
     }
     if(e.touches.length===1){
       const t=e.touches[0];
-      // If pending, finger moved — commit the tool action now
+      // If pending, only commit if finger has moved significantly — small drift may be the start of a pinch
       if(ts.mode==='pending'&&ts._pendingTimer){
-        clearTimeout(ts._pendingTimer);ts._pendingTimer=null;
-        ts.mode='draw';
-        canvasWrap.onmousedown({button:0,clientX:ts._pendingTouch.clientX,clientY:ts._pendingTouch.clientY,preventDefault:()=>{}});
+        const dx=t.clientX-ts._pendingTouch.clientX,dy=t.clientY-ts._pendingTouch.clientY;
+        if(Math.hypot(dx,dy)>12){
+          clearTimeout(ts._pendingTimer);ts._pendingTimer=null;
+          ts.mode='draw';
+          canvasWrap.onmousedown({button:0,clientX:ts._pendingTouch.clientX,clientY:ts._pendingTouch.clientY,preventDefault:()=>{}});
+        }
       }
       if(ts.mode==='pan1'){const p={x:t.clientX,y:t.clientY};panX+=p.x-ts.lastMid.x;panY+=p.y-ts.lastMid.y;ts.lastMid=p;updateTransform();return;}
       if(ts.mode==='eraser'){eraserHitTest(canvasCoords(t));return;}

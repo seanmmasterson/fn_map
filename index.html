@@ -651,7 +651,24 @@
   $('rn-skip').onclick=()=>{routeDialog.classList.remove('show');if(routeDialogCallback)routeDialogCallback(null);routeDialogCallback=null;};
   routeNameInput.onkeydown=e=>{if(e.key==='Enter')$('rn-confirm').click();if(e.key==='Escape')$('rn-skip').click();};
   $('new-route-btn').onclick=startNewRoute;
-  function startNewRoute(){currentRouteId++;waypointCounter=0;showRouteNameDialog('New Route Name','Player name (e.g. IGL)',n=>{if(n)routeNames[currentRouteId]=n;setTool('waypoint');updateAllWpNameTags();refreshWpPanel();});}
+  const routeColors=['#ffffff','#ffd600','#ff9100','#ff3b5c','#00d4ff','#00e676','#b388ff'];
+  function startNewRoute(){
+    deselectWp();
+    currentRouteId++;
+    waypointCounter=0;
+    // Auto-pick a different colour from the previous route
+    const usedColors=new Set();
+    markersLayer.querySelectorAll('.numbered-marker').forEach(el=>usedColors.add(el.style.background));
+    const nextColor=routeColors.find(c=>!usedColors.has(c))||routeColors[currentRouteId%routeColors.length];
+    color=nextColor;
+    document.querySelectorAll('.cdot').forEach(d=>d.classList.toggle('active',d.dataset.color===color));
+    showRouteNameDialog('New Route Name','Player name (e.g. IGL)',n=>{
+      if(n)routeNames[currentRouteId]=n;
+      setTool('waypoint');
+      updateAllWpNameTags();
+      refreshWpPanel();
+    });
+  }
 
   mapImg.onload=()=>{const W=mapImg.naturalWidth,H=mapImg.naturalHeight;previewCanvas.width=W;previewCanvas.height=H;previewCanvas.style.width=W+'px';previewCanvas.style.height=H+'px';mapImg.style.width=W+'px';mapImg.style.height=H+'px';poiLayer.style.width=W+'px';poiLayer.style.height=H+'px';fitView();setTool('pan');};
   mapImg.onerror=()=>console.error('Map image failed to load.');
@@ -870,7 +887,7 @@
 
   function placeWaypoint(pos){if(currentRouteId===1&&!firstRouteNamed&&waypointCounter===0){firstRouteNamed=true;showRouteNameDialog('Name Route 1','Player name (e.g. IGL)',n=>{if(n)routeNames[1]=n;doPlaceWaypoint(pos);});return;}doPlaceWaypoint(pos);}
   function doPlaceWaypoint(pos){waypointCounter++;const el=document.createElement('div');el.className='numbered-marker';el.dataset.wpIndex=waypointCounter;el.dataset.routeId=currentRouteId;el.style.left=pos.x+'px';el.style.top=pos.y+'px';el.style.background=color;el.style.color='#000';el.textContent=waypointCounter;const name=routeNames[currentRouteId];if(name&&waypointCounter===1){const tag=document.createElement('div');tag.className='wp-name-tag';tag.textContent=name;el.appendChild(tag);}setupWaypointEvents(el);markersLayer.appendChild(el);pushElementUndo(el);redrawWaypointLines();setTool('waypoint');refreshWpPanel();}
-  function setupWaypointEvents(el){makeDraggable(el,true);let lct=0;el.onclick=e=>{e.stopPropagation();const now=Date.now();if(now-lct<350){deleteWaypoint(el);lct=0;return;}lct=now;if(tool==='waypoint'){const rid=parseInt(el.dataset.routeId);if(rid!==currentRouteId){currentRouteId=rid;const grp=[...markersLayer.querySelectorAll(`.numbered-marker[data-route-id="${rid}"]`)];waypointCounter=grp.length;color=el.style.background;document.querySelectorAll('.cdot').forEach(d=>d.classList.toggle('active',d.dataset.color===color));setTool('waypoint');}}selectWp(el);};el.oncontextmenu=e=>{e.preventDefault();deleteWaypoint(el);};}
+  function setupWaypointEvents(el){makeDraggable(el,true);let lct=0;el.onclick=e=>{e.stopPropagation();const now=Date.now();if(now-lct<350){deleteWaypoint(el);lct=0;return;}lct=now;selectWp(el);};el.oncontextmenu=e=>{e.preventDefault();deleteWaypoint(el);};}
   function updateAllWpNameTags(){markersLayer.querySelectorAll('.numbered-marker').forEach(el=>{const ex=el.querySelector('.wp-name-tag');if(ex)ex.remove();const rid=el.dataset.routeId,name=routeNames[rid];if(name&&el.dataset.wpIndex==='1'){const tag=document.createElement('div');tag.className='wp-name-tag';tag.textContent=name;el.appendChild(tag);}});}
   function renumberWaypoints(){const all=[...markersLayer.querySelectorAll('.numbered-marker')],groups={};all.forEach(w=>{const r=w.dataset.routeId||'1';if(!groups[r])groups[r]=[];groups[r].push(w);});Object.values(groups).forEach(g=>g.forEach((w,i)=>{w.dataset.wpIndex=''+(i+1);const nt=w.querySelector('.wp-name-tag');w.textContent=i+1;if(nt)w.appendChild(nt);}));const cur=groups[currentRouteId]||[];waypointCounter=cur.length;updateAllWpNameTags();}
   function getRouteGroups(){const all=[...markersLayer.querySelectorAll('.numbered-marker')],g={};all.forEach(el=>{const r=el.dataset.routeId||'1';if(!g[r])g[r]=[];g[r].push({x:parseFloat(el.style.left),y:parseFloat(el.style.top),color:el.style.background,el});});return g;}
@@ -987,7 +1004,18 @@
       };
       btns[1].onclick=e=>{e.stopPropagation();if(v.indent>0)v.indent--;renderViewsList();};
       btns[2].onclick=e=>{e.stopPropagation();if(v.indent<4)v.indent++;renderViewsList();};
-      btns[3].onclick=e=>{e.stopPropagation();views.splice(i+1,0,{name:v.name+' (copy)',indent:v.indent,state:JSON.parse(JSON.stringify(v.state))});activeViewIdx=i+1;renderViewsList();};
+      btns[3].onclick=e=>{e.stopPropagation();
+        // Save current canvas state before duplicating
+        if(activeViewIdx>=0&&activeViewIdx<views.length){views[activeViewIdx].state=JSON.parse(JSON.stringify(captureState()));}
+        const srcState=i===activeViewIdx?captureState():v.state;
+        const dupState=JSON.parse(JSON.stringify(srcState));
+        views.splice(i+1,0,{name:v.name+' (copy)',indent:v.indent,state:dupState});
+        activeViewIdx=i+1;
+        switchingView=true;
+        restoreState(dupState);
+        renderViewsList();
+        switchingView=false;
+      };
       btns[4].onclick=e=>{e.stopPropagation();views.splice(i,1);if(activeViewIdx>=views.length)activeViewIdx=Math.max(0,views.length-1);renderViewsList();};
       item.addEventListener('dragstart',e=>{dragViewIdx=i;item.style.opacity='0.4';e.dataTransfer.effectAllowed='move';});
       item.addEventListener('dragend',()=>{item.style.opacity='1';dragViewIdx=null;list.querySelectorAll('.view-item').forEach(el=>el.style.borderTop='');});

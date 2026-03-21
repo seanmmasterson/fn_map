@@ -918,7 +918,7 @@
   }
   function restoreState(st){
     drawObjects.forEach(o=>o.canvas.remove());drawObjects=[];drawObjectsLayer.innerHTML='';
-    if(st.drawObjects){st.drawObjects.forEach(d=>{const c=createDrawCanvas(),cx=c.getContext('2d');const img=new Image();img.onload=()=>{cx.drawImage(img,0,0);delete obj._srcDataUrl;};img.src=d.dataUrl;const id=++drawIdCounter;c.dataset.drawId=id;const obj={id,type:d.type,canvas:c,_srcDataUrl:d.dataUrl};drawObjects.push(obj);drawObjectsLayer.appendChild(c);c.style.opacity=drawOpacity;});}
+    if(st.drawObjects){st.drawObjects.forEach(d=>{const c=createDrawCanvas(),cx=c.getContext('2d');const img=new Image();const id=++drawIdCounter;c.dataset.drawId=id;const obj={id,type:d.type,canvas:c,bounds:null,_srcDataUrl:d.dataUrl};img.onload=()=>{cx.drawImage(img,0,0);obj.bounds=computeCanvasBounds(c);delete obj._srcDataUrl;};img.src=d.dataUrl;drawObjects.push(obj);drawObjectsLayer.appendChild(c);c.style.opacity=drawOpacity;});}
     // Strip any legacy pins from markersHTML before restoring
     markersLayer.innerHTML=stripPinsFromHTML(st.markersHTML||'');routeNames=JSON.parse(JSON.stringify(st.routeNames));wpNames=JSON.parse(JSON.stringify(st.wpNames||{}));currentRouteId=st.currentRouteId;waypointCounter=st.waypointCounter;
     if(st.color){color=st.color;document.querySelectorAll('.cdot').forEach(d=>d.classList.toggle('active',d.dataset.color===color));}
@@ -1132,7 +1132,7 @@
         drawObjects.forEach(o=>o.canvas.remove());drawObjects=[];drawObjectsLayer.innerHTML='';
         if(data.drawObjects){data.drawObjects.forEach(d=>{
           const c=createDrawCanvas(),cx=c.getContext('2d');
-          const img=new Image();const obj={id:0,type:d.type,canvas:c,_srcDataUrl:d.dataUrl};img.onload=()=>{cx.drawImage(img,0,0);delete obj._srcDataUrl;};img.src=d.dataUrl;
+          const img=new Image();const obj={id:0,type:d.type,canvas:c,bounds:null,_srcDataUrl:d.dataUrl};img.onload=()=>{cx.drawImage(img,0,0);obj.bounds=computeCanvasBounds(c);delete obj._srcDataUrl;};img.src=d.dataUrl;
           const id=++drawIdCounter;c.dataset.drawId=id;obj.id=id;
           drawObjects.push(obj);
           drawObjectsLayer.appendChild(c);c.style.opacity=drawOpacity;
@@ -1238,7 +1238,7 @@
       drawObjects.forEach(o=>o.canvas.remove());drawObjects=[];drawObjectsLayer.innerHTML='';
       if(data.drawObjects){data.drawObjects.forEach(d=>{
         const c=createDrawCanvas(),cx=c.getContext('2d');
-        const img=new Image();const obj={id:0,type:d.type,canvas:c,_srcDataUrl:d.dataUrl};img.onload=()=>{cx.drawImage(img,0,0);delete obj._srcDataUrl;};img.src=d.dataUrl;
+        const img=new Image();const obj={id:0,type:d.type,canvas:c,bounds:null,_srcDataUrl:d.dataUrl};img.onload=()=>{cx.drawImage(img,0,0);obj.bounds=computeCanvasBounds(c);delete obj._srcDataUrl;};img.src=d.dataUrl;
         const id=++drawIdCounter;c.dataset.drawId=id;obj.id=id;
         drawObjects.push(obj);
         drawObjectsLayer.appendChild(c);c.style.opacity=drawOpacity;
